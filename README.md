@@ -23,7 +23,6 @@ This Bash script, `setup_apt_proxy.sh`, is designed to automate the configuratio
 2. **Make the Script Executable**:
    ```bash
    sudo chmod +x /usr/local/bin/setup_apt_proxy.sh
-```
 
 Usage
 -----
