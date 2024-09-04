@@ -19,48 +19,79 @@ APT_CONF="/etc/apt/apt.conf.d/01proxy"
 SCRIPT_PATH="/usr/local/bin/setup_apt_proxy.sh"
 CRON_JOB="0 1 * * * $SCRIPT_PATH"
 
+# Function: log
+# Description: Outputs log messages with a timestamp
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
+
 # Function: set_apt_proxy
 # Description: Configures the APT proxy settings.
 set_apt_proxy() {
-    echo "Configuring APT proxy..."
+    log "Configuring APT proxy..."
     if [ -f "$APT_CONF" ]; then
-        echo "APT proxy already set. Updating proxy URL..."
-        sudo sed -i "s|^Acquire::http::Proxy \".*\"|Acquire::http::Proxy \"$PROXY_URL\"|g" "$APT_CONF"
+        log "APT proxy already set. Checking if update is needed..."
+        current_proxy=$(grep -oP '(?<=Acquire::http::Proxy ").*?(?=";)' "$APT_CONF" || true)
+        if [ "$current_proxy" != "$PROXY_URL" ]; then
+            log "Updating APT proxy URL..."
+            sudo sed -i "s|^Acquire::http::Proxy \".*\"|Acquire::http::Proxy \"$PROXY_URL\"|g" "$APT_CONF"
+            log "APT proxy URL updated."
+        else
+            log "APT proxy URL is already set to the desired value. No update needed."
+        fi
     else
-        echo "Setting APT proxy for the first time..."
+        log "Setting APT proxy for the first time..."
         echo "Acquire::http::Proxy \"$PROXY_URL\";" | sudo tee "$APT_CONF" > /dev/null
+        log "APT proxy configuration complete."
     fi
-    echo "APT proxy configuration complete."
 }
 
 # Function: setup_cron
 # Description: Sets up a cron job to run this script every night at 01:00.
 setup_cron() {
-    echo "Setting up cron job..."
+    log "Setting up cron job..."
 
     # Check if the cron job already exists to avoid duplication
     if sudo crontab -l 2>/dev/null | grep -qF "$SCRIPT_PATH"; then
-        echo "Cron job already exists."
+        log "Cron job already exists."
     else
         # Add the cron job to the root user's crontab
         (sudo crontab -l 2>/dev/null; echo "$CRON_JOB") | sudo crontab -
-        echo "Cron job added."
+        log "Cron job added."
     fi
 
-    echo "Cron job set to run every night at 01:00."
+    log "Cron job set to run every night at 01:00."
 }
 
 # Function: update_apt
 # Description: Updates and upgrades APT packages.
 update_apt() {
-    echo "Updating APT..."
+    log "Updating APT..."
     sudo apt-get update -y && sudo apt-get upgrade -y
-    echo "APT update and upgrade complete."
+    log "APT update and upgrade complete."
+}
+
+# Function: check_script_location
+# Description: Checks if the script is in the correct location and moves it if necessary.
+check_script_location() {
+    if [ "$(realpath "$0")" != "$SCRIPT_PATH" ]; then
+        log "Script is not located at $SCRIPT_PATH. Moving it..."
+        sudo mv "$0" "$SCRIPT_PATH"
+        sudo chmod +x "$SCRIPT_PATH"
+        log "Script moved to $SCRIPT_PATH and made executable."
+        log "Please run the script again from its new location."
+        exit 0
+    else
+        log "Script is already in the correct location."
+    fi
 }
 
 # Function: main
 # Description: Main function to execute the script's logic.
 main() {
+    # Check if the script is in the correct location
+    check_script_location
+
     # Update APT
     update_apt
 
@@ -70,7 +101,7 @@ main() {
     # Setup cron job
     setup_cron
 
-    echo "All tasks completed successfully."
+    log "All tasks completed successfully."
 }
 
 # Check if script is run as root
