@@ -7,7 +7,7 @@ This Bash script, `setup_apt_proxy.sh`, is designed to automate the configuratio
 Heres a quick oneliner to get started:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/Paul1404/setup_apt_proxy.sh/main/setup_apt_proxy.sh | sudo bash
+sudo wget -qO /usr/local/bin/setup_apt_proxy.sh https://raw.githubusercontent.com/Paul1404/setup_apt_proxy.sh/main/setup_apt_proxy.sh && sudo chmod +x /usr/local/bin/setup_apt_proxy.sh && sudo /usr/local/bin/setup_apt_proxy.sh
 ```
 
 ## Features
