@@ -4,6 +4,12 @@
 
 This Bash script, `setup_apt_proxy.sh`, is designed to automate the configuration of an APT proxy, update the system's APT package list, and set up a cron job to perform these tasks nightly. The script is ideal for environments where an APT proxy is used to cache package downloads to improve network efficiency.
 
+Heres a quick oneliner to get started:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/Paul1404/setup_apt_proxy.sh/main/setup_apt_proxy.sh | sudo bash
+```
+
 ## Features
 
 - **APT Proxy Configuration**: Automatically sets or updates the APT proxy configuration file.
