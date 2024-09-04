@@ -1,0 +1,49 @@
+server {
+    listen 80;
+    server_name apt-cacher.home.local;
+
+    # Location for package caching (allow all machines without authentication)
+    location / {
+        proxy_pass http://localhost:3142;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Location for web interface (enforce authentication)
+    location /acng-report.html {
+        proxy_pass http://localhost:3142/acng-report.html;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Enforce authentication for viewing the web interface
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        
+        # Block all actions (POST requests or specific paths) if buttons are also paths
+        limit_except GET {
+            deny all;
+        }
+    }
+
+    # Also enforce authentication for any sub-paths or query parameters under /acng-report.html
+    location ~* /acng-report.* {
+        proxy_pass http://localhost:3142;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Enforce authentication for any sub-path or query parameters
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        
+        # Restrict non-GET methods to prevent interaction without authentication
+        limit_except GET {
+            deny all;
+        }
+    }
+}
